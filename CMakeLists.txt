@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project( simple_mono_vo )
+project( simple_visual_odom )
 
 add_compile_options(-std=c++11)
 
@@ -21,8 +21,8 @@ add_definitions(
 )
 
 
-add_executable( simple_mono_vo src/vo.cpp )
-target_link_libraries( simple_mono_vo 
+add_executable( simple_visual_odom src/visual_odom.cpp )
+target_link_libraries( simple_visual_odom 
                         ${OpenCV_LIBS} 
                         boost_system
                         boost_filesystem

@@ -7,9 +7,9 @@
 //*** opencv headers
 #include <opencv2/opencv.hpp>
 
-#define BOOST_NO_CXX11_SCOPED_ENUMS
+//#define BOOST_NO_CXX11_SCOPED_ENUMS
 #include <boost/filesystem.hpp>
-#undef BOOST_NO_CXX11_SCOPED_ENUMS
+//#undef BOOST_NO_CXX11_SCOPED_ENUMS
 
 
 
@@ -19,11 +19,16 @@ class VisualOdom{
 
         VisualOdom(const std::string &folder_);
 
+        void load_camera_params();
+        
+
+
         void build_image_list(const std::string &folder_);
 
+        void match_features(const cv::Mat &img_one_,  const cv::Mat &img_two_);
 
 
-    private:
+    //private:
 
         std::string image_folder_;
         
