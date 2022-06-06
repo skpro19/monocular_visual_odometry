@@ -15,69 +15,48 @@ VisualOdom::VisualOdom(const std::string &folder_):image_folder_{folder_}{
 
 }
 
-void VisualOdom::match_features(const cv::Mat &img_1,  const cv::Mat &img_2){
+void VisualOdom::match_features(const cv::Mat &img_1){
+//void VisualOdom::match_features(boost::filesystem::path &path_){
 
     using namespace cv;
 
-    //Mat out_img_;
-    //cvtColor(img_1, img_1, IMREAD_COLOR);
-    imshow("image", img_1);
+    //Mat image = imread(path_.c_str());
+    Mat image;
+    cv::cvtColor(img_1, image, COLOR_BGR2GRAY);
 
+    std::vector< cv::Point2f > corners;
 
-    std::vector<KeyPoint> keypoints_1, keypoints_2;
-    Mat descriptors_1, descriptors_2;
-    Ptr<FeatureDetector> detector = ORB::create();
-    Ptr<DescriptorExtractor> descriptor = ORB::create();
+    int maxCorners = 2000;
+
+    double qualityLevel = 0.01;
+
+    double minDistance = 1.;
+
+    cv::Mat mask;
     
-    Ptr<DescriptorMatcher> matcher  = DescriptorMatcher::create ( "BruteForce-Hamming" );
+    int blockSize = 3;
 
-    detector->detect ( img_1,keypoints_1 );
-    detector->detect ( img_2,keypoints_2 );
+    bool useHarrisDetector = false;
 
-    descriptor->compute ( img_1, keypoints_1, descriptors_1 );
-    descriptor->compute ( img_2, keypoints_2, descriptors_2 );
+    double k = 0.04;
 
-    std::vector<DMatch> matches;
-    matcher->match ( descriptors_1, descriptors_2, matches );
-
-    double min_dist=10000, max_dist=0;
-
-    for ( int i = 0; i < descriptors_1.rows; i++ )
-    {
-        double dist = matches[i].distance;
-        if ( dist < min_dist ) min_dist = dist;
-        if ( dist > max_dist ) max_dist = dist;
-    }
-
+    cv::goodFeaturesToTrack( image, corners, maxCorners, qualityLevel, minDistance, mask, blockSize, useHarrisDetector, k );
     
-    Scalar green_=  Scalar(0, 0, 255);
+    cv::cvtColor(image, image, COLOR_GRAY2BGR);
 
-    std::vector< DMatch > good_matches;
-    for ( int i = 0; i < descriptors_1.rows; i++ )
-    {
-        if ( matches[i].distance <= max ( 2*min_dist, 30.0 ) )
-        {
-            good_matches.push_back ( matches[i] );
 
-            circle(img_1, keypoints_1[matches[i].queryIdx].pt, 10, Scalar(0 , 0, 255));
-            circle(img_1, keypoints_1[matches[i].trainIdx].pt, 10, Scalar(0 , 255, 0));
+    for( size_t i = 0; i < corners.size(); i++ )
+    {  
         
-        }
+        cv::circle( image, corners[i], 2, cv::Scalar( 0, 255, 0), -1 );
     }
 
-    imshow("outimg_1",img_1);
 
 
-    //Mat img_match;
-    //Mat img_goodmatch;
-    //drawMatches ( img_1, keypoints_1, img_2, keypoints_2, matches, img_match );
-    //drawMatches ( img_1, keypoints_1, img_2, keypoints_2, good_matches, img_goodmatch );
-    
-    //imshow ( "所有匹配点对", img_match );
-    //imshow ( "优化后匹配点对", img_goodmatch );
-    
     waitKey(100);
-    
+
+    imshow("img",image);
+
 }
 
 
@@ -100,7 +79,8 @@ void VisualOdom::build_image_list(const std::string &folder){
         } 
     }
 
-    printf("image_path_list.size(): %d\n", image_path_list_.size());
+    //printf("image_path_list.size(): %d\n", image_path_list_.size());
+    sort(image_path_list_.begin(), image_path_list_.end());
 
 }
 
@@ -114,24 +94,25 @@ int main(){
 
     VisualOdom visual_odom_("../data/02/image_0/");
 
-    sort(visual_odom_.image_path_list_.begin(), visual_odom_.image_path_list_.end());
-
+   
     //cv::Mat img_1 = cv::imread("../data/02/image_0/000001.png", cv::IMREAD_GRAYSCALE);
     //cv::Mat img_2 = cv::imread("../data/02/image_0/000002.png", cv::IMREAD_GRAYSCALE);
 
     int sz_ = (int)visual_odom_.image_path_list_.size(); 
 
+    //int sz_ = 10;
+
     for(int i = 0 ; i < sz_ - 1; i++) {
 
 
-        cv::Mat img_1 = cv::imread(visual_odom_.image_path_list_[i].c_str(), cv::IMREAD_COLOR);
-        cv::Mat img_2 = cv::imread(visual_odom_.image_path_list_[i + 1].c_str(), cv::IMREAD_COLOR);
+        cv::Mat img_1 = cv::imread(visual_odom_.image_path_list_[i].c_str());
+        cv::Mat img_2 = cv::imread(visual_odom_.image_path_list_[i + 1].c_str());
 
-        visual_odom_.match_features(img_1, img_2);
+        visual_odom_.match_features(img_1);
 
     }
 
-    cv::waitKey(0);
+    //cv::waitKey(0);
 
     return 0;
 

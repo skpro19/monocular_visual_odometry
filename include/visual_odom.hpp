@@ -25,8 +25,8 @@ class VisualOdom{
 
         void build_image_list(const std::string &folder_);
 
-        void match_features(const cv::Mat &img_one_,  const cv::Mat &img_two_);
-
+        void match_features(const cv::Mat &img_one_);
+        //void match_features(boost::filesystem::path &path_);
 
     //private:
 
