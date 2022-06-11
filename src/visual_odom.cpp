@@ -15,47 +15,120 @@ VisualOdom::VisualOdom(const std::string &folder_):image_folder_{folder_}{
 
 }
 
-void VisualOdom::match_features(const cv::Mat &img_1){
-//void VisualOdom::match_features(boost::filesystem::path &path_){
+void VisualOdom::extract_features(const cv::Mat &img_1, const cv::Mat &img_2){
 
-    using namespace cv;
+    cv::Mat image_one, image_two;
 
-    //Mat image = imread(path_.c_str());
-    Mat image;
-    cv::cvtColor(img_1, image, COLOR_BGR2GRAY);
+    cv::cvtColor(img_1, image_one, cv::COLOR_BGR2GRAY);
+    cv::cvtColor(img_2, image_two, cv::COLOR_BGR2GRAY);
 
-    std::vector< cv::Point2f > corners;
+    std::vector< cv::Point2f > corners_one, corners_two;
 
-    int maxCorners = 2000;
+    
+    int maxCorners = 5000;
 
     double qualityLevel = 0.01;
 
-    double minDistance = 1.;
+    double minDistance = 1.0;
 
-    cv::Mat mask;
+    cv::Mat mask = cv::Mat();
     
-    int blockSize = 3;
+    int blockSize = 1;
 
     bool useHarrisDetector = false;
 
     double k = 0.04;
 
-    cv::goodFeaturesToTrack( image, corners, maxCorners, qualityLevel, minDistance, mask, blockSize, useHarrisDetector, k );
     
-    cv::cvtColor(image, image, COLOR_GRAY2BGR);
+    //*** keypoints extraction
+    cv::goodFeaturesToTrack( image_one, corners_one, maxCorners, qualityLevel, minDistance, mask, blockSize, useHarrisDetector, k );
+    cv::goodFeaturesToTrack( image_two, corners_two, maxCorners, qualityLevel, minDistance, mask, blockSize, useHarrisDetector, k );
 
+    
+    for (auto point: corners_one) {
 
-    for( size_t i = 0; i < corners.size(); i++ )
-    {  
-        
-        cv::circle( image, corners[i], 2, cv::Scalar( 0, 255, 0), -1 );
+        kp_1.push_back(cv::KeyPoint(cv::Point2f(point.x, point.y), 2));
+
     }
 
+    for (auto point: corners_two) {
 
 
-    waitKey(100);
+        kp_2.push_back(cv::KeyPoint(cv::Point2f(point.x, point.y), 2));
+    }
+    
 
-    imshow("img",image);
+}
+
+
+void VisualOdom::match_features(const cv::Mat &img_1, const cv::Mat &img_2){
+    
+    
+    cv::Mat image_one, image_two;
+    cv::cvtColor(img_1, image_one, cv::COLOR_BGR2GRAY);
+    cv::cvtColor(img_2, image_two, cv::COLOR_BGR2GRAY);
+    
+    cv::Mat mask = cv::Mat();
+    cv::Mat des_1, des_2;
+    
+    cv::Ptr<cv::ORB>orb_ = cv::ORB::create(5000);
+
+    
+
+
+    //*** extracting descriptors from keypoints
+    orb_->detectAndCompute(image_one, mask, kp_1, des_1);
+    orb_->detectAndCompute(image_two, mask, kp_2, des_2);
+    
+   // des_1.convertTo(des_1, 5);
+    //des_2.convertTo(des_2, 5);
+    
+    des_1.convertTo(des_1, 0);
+    des_2.convertTo(des_2, 0);
+    
+
+    //cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::FLANNBASED);
+    cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
+
+    std::vector<cv::DMatch> brute_hamming_matches;
+    matcher->match(des_1, des_2, brute_hamming_matches);
+
+    
+    double min_dist=10000, max_dist=0;
+
+    for ( int i = 0; i < des_1.rows; i++ )
+    {
+        double dist = brute_hamming_matches[i].distance;
+        if ( dist < min_dist ) min_dist = dist;
+        if ( dist > max_dist ) max_dist = dist;
+    }
+
+    printf ( "-- Max dist : %f \n", max_dist );
+    printf ( "-- Min dist : %f \n", min_dist );
+
+    std::vector<cv::DMatch> good_matches;
+    
+    for ( int i = 0; i < des_1.rows; i++ )
+    {
+        if ( brute_hamming_matches[i].distance <= std::max( 2*min_dist, 30.0 ) )
+        {
+            good_matches.push_back (brute_hamming_matches[i] );
+        }
+    }
+    
+
+    for (auto match : good_matches) {
+
+        cv::circle( img_1, kp_1[match.queryIdx].pt, 2, cv::Scalar( 0, 255, 0), -1 );
+        cv::circle( img_1, kp_2[match.trainIdx].pt, 2, cv::Scalar( 255, 0, 0), -1 );
+        cv::line(img_1, kp_1[match.queryIdx].pt, kp_2[match.trainIdx].pt, cv::Scalar(0, 255,0));
+    }
+
+    
+
+    cv::imshow("img",img_1);
+    cv::waitKey(10);
+  
 
 }
 
@@ -94,25 +167,17 @@ int main(){
 
     VisualOdom visual_odom_("../data/02/image_0/");
 
-   
-    //cv::Mat img_1 = cv::imread("../data/02/image_0/000001.png", cv::IMREAD_GRAYSCALE);
-    //cv::Mat img_2 = cv::imread("../data/02/image_0/000002.png", cv::IMREAD_GRAYSCALE);
-
     int sz_ = (int)visual_odom_.image_path_list_.size(); 
 
-    //int sz_ = 10;
-
     for(int i = 0 ; i < sz_ - 1; i++) {
-
 
         cv::Mat img_1 = cv::imread(visual_odom_.image_path_list_[i].c_str());
         cv::Mat img_2 = cv::imread(visual_odom_.image_path_list_[i + 1].c_str());
 
-        visual_odom_.match_features(img_1);
+        visual_odom_.extract_features(img_1, img_2);
+        visual_odom_.match_features(img_1, img_2);
 
     }
-
-    //cv::waitKey(0);
 
     return 0;
 

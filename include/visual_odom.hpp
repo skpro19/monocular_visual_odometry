@@ -24,16 +24,16 @@ class VisualOdom{
 
 
         void build_image_list(const std::string &folder_);
-
-        void match_features(const cv::Mat &img_one_);
-        //void match_features(boost::filesystem::path &path_);
-
+        void extract_features(const cv::Mat &img_1, const cv::Mat &img_2);
+        void match_features(const cv::Mat &img_1, const cv::Mat &img_2);
+        
     //private:
 
         std::string image_folder_;
         
         std::vector<boost::filesystem::path> image_path_list_; 
-
+        std::vector<cv::KeyPoint> kp_1, kp_2; 
+  
 
 };
 
