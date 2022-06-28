@@ -57,17 +57,25 @@ class VisualOdom{
     private:
 
         //**input functions
-        void read_projection_matrix();
+        void process_data_files();
+        void read_projection_matrix(const std::string &file_name_);
         void load_camera_params_matrix(); 
         void load_camera_params();
-        void read_ground_truth_poses();
+        void read_ground_truth_poses(const std::string &file_name_);
+
+        //** camera movement functions
+        void calculate_camera_poses(); //calcula
+
+        //** to be refactored
+        void run_vo_pipeline();
+
 
     public:     
 
         VisualOdom(const std::string &folder_);
 
         
-        void build_image_list(const std::string &folder_);
+        void read_image_files(const std::string &folder_);
         void extract_features(const cv::Mat &img_1, const cv::Mat &img_2);
         void match_features(const cv::Mat &img_1, const cv::Mat &img_2);
         cv::Mat get_essential_matrix(const cv::Mat &img_1, const cv::Mat &img_2);        
@@ -82,8 +90,6 @@ class VisualOdom{
         
         std::vector<cv::Point2f> kp_1_matched, kp_2_matched; 
 
-
-
         double focal_ ; 
         cv::Point2d pp_;
 
@@ -91,17 +97,27 @@ class VisualOdom{
         std::vector<cv::Mat> gt_poses_;
         
         
-        //** camera parameters -> extrinsic + intrinsic
-        cv::Mat P_; //camera projection matrix -> [3 * 3]
-        cv::Mat K_; //camera matrix -> [3 * 3]
-        cv::Mat R_; //camera rotation -> [3 * 3]
-        cv::Mat t_; //camera translation -> [4 * 1]
+        cv::Mat P_; //camera projection matrix -> [3 * 4]
+        cv::Mat K_; //camera intrinsics matrix [3 * 3]
+        cv::Mat R_; //camera axis rotation w.r.t. world 
+        cv::Mat t_; //camera axis translation w.r.t. world 
 
         //** file input vars
         std::string base_dir_; 
         std::string data_dir_;
+        std::string image_dir_;
         std::string calib_file_name_;
         std::string gt_file_name_;
+        
+        std::vector<cv::String> image_file_names_;
+
+        //** camera translation params
+         //C_k = C_k_minus_1_ * T_k_
+        cv::Mat C_k_, C_k_minus_1_; //kth camera pose in the same frame as C_0_  
+        cv::Mat T_k_; //relates the transform between the camera poses C_k_minus_1_ and 
+
+
+
 
 };  
 

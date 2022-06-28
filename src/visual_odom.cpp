@@ -5,18 +5,19 @@
 #include <iostream>
 
 
-VisualOdom::VisualOdom(const std::string &folder_):image_folder_{folder_}{
+//VisualOdom::VisualOdom(const std::string &folder_):image_folder_{folder_}{
+VisualOdom::VisualOdom(const std::string &folder_){
 
     std::cout << "Inside the VO constructor!" << std::endl;    //build_image_list(image_folder_);
 
     base_dir_ = "/home/skpro19/simple_visual_odom/";
     data_dir_ = base_dir_ + "data/02/";
+    
+    
+    process_data_files();
 
-    calib_file_name_ = "calib.txt";
-    gt_file_name_ = "02.txt";
-
-    read_projection_matrix();
-    read_ground_truth_poses();
+    //read_projection_matrix();
+    //read_ground_truth_poses();
     //load_camera_params();
 
 
@@ -27,9 +28,21 @@ VisualOdom::VisualOdom(const std::string &folder_):image_folder_{folder_}{
 
 }
 
-void VisualOdom::read_ground_truth_poses(){
+void VisualOdom::process_data_files(){
 
-    std::cout <<"Inside the read_ground_truth_poses function!" << std::endl;
+    calib_file_name_ = "calib.txt";
+    gt_file_name_ = "02.txt";
+    image_dir_ = "image_0/";
+    
+    read_projection_matrix(calib_file_name_);
+    read_ground_truth_poses(gt_file_name_);
+    read_image_files(image_dir_);
+
+}
+
+void VisualOdom::read_ground_truth_poses(const std::string &gt_file_name_){
+
+    //std::cout <<"Inside the read_ground_truth_poses function!" << std::endl;
 
     std::string gt_file_ = data_dir_ + gt_file_name_;
     
@@ -43,7 +56,7 @@ void VisualOdom::read_ground_truth_poses(){
 
         while(std::getline(gt_, line_)){
 
-            std::cout << "line: " << line_ << std::endl;
+            //std::cout << "line: " << line_ << std::endl;
 
             double f_;
 
@@ -57,10 +70,10 @@ void VisualOdom::read_ground_truth_poses(){
 
             }
             
-            std::cout << "v_.size(): " << v_.size() << std::endl; 
+            //std::cout << "v_.size(): " << v_.size() << std::endl; 
 
-            for(auto t: v_) std::cout << t << " " ;
-            std::cout << std::endl;
+            //for(auto t: v_) std::cout << t << " " ;
+            //std::cout << std::endl;
 
             cv::Mat gt_;
             gt_ = cv::Mat(v_).reshape(0, 3);
@@ -115,7 +128,7 @@ void VisualOdom::load_camera_params_matrix(){
  * 
  */
 
-void VisualOdom::read_projection_matrix(){
+void VisualOdom::read_projection_matrix(const std::string &calib_file_name_){
 
     std::string calib_file_ = data_dir_ + calib_file_name_;
     
@@ -282,29 +295,13 @@ void VisualOdom::match_features(const cv::Mat &img_1, const cv::Mat &img_2){
 
 }
 
+void VisualOdom::read_image_files(const std::string &img_folder_name_){
 
-void VisualOdom::build_image_list(const std::string &folder){
+    std::string image_folder_ = data_dir_ + img_folder_name_;
 
-    namespace fs = boost::filesystem; 
+    cv::glob(image_folder_, image_file_names_, false);
 
-    fs::path targetDir(folder); 
-
-    fs::directory_iterator it(targetDir), eod;
-
-    BOOST_FOREACH(fs::path const &p, std::make_pair(it, eod))   
-    { 
     
-        if(fs::is_regular_file(p))
-        {
-
-            image_path_list_.push_back(p);
-
-        } 
-    }
-
-    //printf("image_path_list.size(): %d\n", image_path_list_.size());
-    sort(image_path_list_.begin(), image_path_list_.end());
-
 }
 
 double VisualOdom::getAbsoluteScale(int frame_id)	{
@@ -349,11 +346,25 @@ double VisualOdom::getAbsoluteScale(int frame_id)	{
 
 
 
+void VisualOdom::run_vo_pipeline(){
+
+
+
+
+}
+
+
 int main(){
 
-    //VisualOdom::VisualOdom vo_("abcd");
 
-    VisualOdom visual_odom_("../data/02/image_0/");
+
+    VisualOdom vo_("abcd");
+
+
+
+    /*VisualOdom visual_odom_("../data/02/image_0/");
+
+    VisualOdom vo_ = visual_odom_;
 
     //std::cout << visual_odom_.gt_poses_[0].size() << " " << visual_odom_.gt_poses_[0] << std::endl;
 
@@ -365,7 +376,6 @@ int main(){
 
     int cnt = 10; 
     while(cnt--) std::cout << std::endl;
-    */
 
     int sz_ = (int)visual_odom_.gt_poses_.size(); 
     
@@ -377,7 +387,7 @@ int main(){
         std::cout << "(" << m_.at<float>(0,3) << "," << m_.at<float>(1,3) << ","  << m_.at<float>(2,3) << ")" << std::endl;
         idx_++;
         
-    }
+    }*/
     
     /*cv::Mat lpm = cv::Mat(3, 4, CV_32F);
 
@@ -406,7 +416,7 @@ int main(){
 
   // int sz_ = (int)visual_odom_.image_path_list_.size();
 
-   std::cout << "sz_: " << sz_ << std::endl;
+   /*(std::cout << "sz_: " << sz_ << std::endl;
 
     sz_ = 2; 
 
@@ -432,21 +442,25 @@ int main(){
         //cv::recoverPose(E_, visual_odom_.kp_1_matched, visual_odom_.kp_2_matched, R ,t ,visual_odom_.focal_, visual_odom_.pp_, mask_);
         cv::recoverPose(E_, visual_odom_.kp_2_matched, visual_odom_.kp_1_matched, R ,t ,visual_odom_.focal_, visual_odom_.pp_, mask_);
 
-        std::cout << "E_.size(): " << E_.size() << std::endl; 
-        std::cout << "E_: " << E_ << std::endl;
-        
-        std::cout << "R.size(): " << R.size() << std::endl;
-        std::cout << "R: " << R << std::endl;
+            std::cout << "E_.size(): " << E_.size() << std::endl; 
+            std::cout << "E_: " << E_ << std::endl;
+            
+            std::cout << "R.size(): " << R.size() << std::endl;
+            std::cout << "R: " << R << std::endl;
 
-        std::cout << "t.size(): " << t.size() << std::endl;
-        std::cout << "t: " << t << std::endl;
+            std::cout << "t.size(): " << t.size() << std::endl;
+            std::cout << "t: " << t << std::endl;
 
-        cv::Mat Rt = R * t; 
+            cv::Mat Rt = R * t; 
 
-        std::cout <<"Rt.size(): " << Rt.size() << std::endl;
-        std::cout << "Rt: " << Rt << std::endl;
+            std::cout <<"Rt.size(): " << Rt.size() << std::endl;
+            std::cout << "Rt: " << Rt << std::endl;
+         
 
-    }
+
+
+
+    }*/
 
     
 
