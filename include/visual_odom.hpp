@@ -49,6 +49,8 @@ cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
 
     GNUPlot
 
+    add ransac visualization
+
 */
 
 class VisualOdom{
@@ -60,7 +62,6 @@ class VisualOdom{
         void process_data_files();
         void read_projection_matrix(const std::string &file_name_);
         void load_camera_params_matrix(); 
-        void load_camera_params();
         void read_ground_truth_poses(const std::string &file_name_);
 
         //** camera movement functions

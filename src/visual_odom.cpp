@@ -16,6 +16,10 @@ VisualOdom::VisualOdom(const std::string &folder_){
     
     process_data_files();
 
+    load_camera_params();
+
+    run_vo_pipeline();
+
     //read_projection_matrix();
     //read_ground_truth_poses();
     //load_camera_params();
@@ -35,7 +39,11 @@ void VisualOdom::process_data_files(){
     image_dir_ = "image_0/";
     
     read_projection_matrix(calib_file_name_);
+    
+    load_camera_params_matrix();
+
     read_ground_truth_poses(gt_file_name_);
+    
     read_image_files(image_dir_);
 
 }
@@ -103,7 +111,10 @@ void VisualOdom::read_ground_truth_poses(const std::string &gt_file_name_){
 }
 
 
-
+/**
+ * @brief decompose P = K[R|t]
+ * 
+ */
 void VisualOdom::load_camera_params_matrix(){
 
     cv::decomposeProjectionMatrix(P_, K_, R_, t_);
@@ -230,14 +241,6 @@ void VisualOdom::extract_features(const cv::Mat &img_1, const cv::Mat &img_2){
 
 }
 
-
-void VisualOdom::load_camera_params(){
-
-    focal_ = 718.85; 
-    pp_ = {607.19, 185.21};
-
-}
-
 void VisualOdom::match_features(const cv::Mat &img_1, const cv::Mat &img_2){
     
     
@@ -344,11 +347,64 @@ double VisualOdom::getAbsoluteScale(int frame_id)	{
 }
 
 
-
-
 void VisualOdom::run_vo_pipeline(){
 
+    std::cout << "Inside the run_vo_pipeline function!" << std::endl;
 
+    int sz_ = image_file_names_.size(); 
+
+    sz_ = 2; 
+
+    std::cout << "K_: " << K_ << std::endl;
+
+    for(int i = 0 ; i < sz_ - 1; i++) {
+
+        std::cout << "i: " << i << std::endl;
+
+        kp_1.resize(0); 
+        kp_2.resize(0); 
+
+        kp_1_matched.resize(0); 
+        kp_2_matched.resize(0);
+    
+        cv::Mat img_1 = cv::imread(image_file_names_[i].c_str());
+        cv::Mat img_2 = cv::imread(image_file_names_[i + 1].c_str());
+
+        std::cout << "HI" << std::endl;
+
+        extract_features(img_1, img_2);
+        match_features(img_1, img_2);
+
+        std::cout << "2" << std::endl;
+        
+        cv::Mat E_, mask_, R, t;
+
+        //E_ = cv::findEssentialMat(kp_2_matched, kp_1_matched, focal_, pp_,cv::RANSAC, 0.99, 1.0, mask_);
+        E_ = cv::findEssentialMat(kp_2_matched, kp_1_matched, K_,cv::RANSAC, 0.99, 1.0, mask_);
+        
+        std::cout << "E_: " << E_ << std::endl;
+
+        //cv::recoverPose(E_, visual_odom_.kp_1_matched, visual_odom_.kp_2_matched, R ,t ,visual_odom_.focal_, visual_odom_.pp_, mask_);
+        cv::recoverPose(E_, kp_2_matched, kp_1_matched, R ,t ,focal_, pp_, mask_);
+
+        std::cout << "R: " << R << std::endl;
+        std::cout << "t: " << t << std::endl;
+
+            /*std::cout << "E_.size(): " << E_.size() << std::endl; 
+            std::cout << "E_: " << E_ << std::endl;
+            
+            std::cout << "R.size(): " << R.size() << std::endl;
+            std::cout << "R: " << R << std::endl;
+
+            std::cout << "t.size(): " << t.size() << std::endl;
+            std::cout << "t: " << t << std::endl;
+
+            cv::Mat Rt = R * t; 
+
+            std::cout <<"Rt.size(): " << Rt.size() << std::endl;
+            std::cout << "Rt: " << Rt << std::endl;
+            */
+    }
 
 
 }
