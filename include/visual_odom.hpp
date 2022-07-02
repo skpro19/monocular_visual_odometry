@@ -96,6 +96,8 @@ class VisualOdom{
 
         //** data vars
         std::vector<cv::Mat> gt_poses_;
+        std::vector<cv::Mat> predicted_poses_;
+        
         
         
         cv::Mat P_; //camera projection matrix -> [3 * 4]

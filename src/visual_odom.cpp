@@ -8,17 +8,13 @@
 //VisualOdom::VisualOdom(const std::string &folder_):image_folder_{folder_}{
 VisualOdom::VisualOdom(const std::string &folder_){
 
-    std::cout << "Inside the VO constructor!" << std::endl;    //build_image_list(image_folder_);
-
     base_dir_ = "/home/skpro19/simple_visual_odom/";
     data_dir_ = base_dir_ + "data/02/";
     
     
     process_data_files();
 
-    load_camera_params();
-
-    run_vo_pipeline();
+   run_vo_pipeline();
 
     //read_projection_matrix();
     //read_ground_truth_poses();
@@ -39,11 +35,8 @@ void VisualOdom::process_data_files(){
     image_dir_ = "image_0/";
     
     read_projection_matrix(calib_file_name_);
-    
     load_camera_params_matrix();
-
     read_ground_truth_poses(gt_file_name_);
-    
     read_image_files(image_dir_);
 
 }
@@ -56,18 +49,18 @@ void VisualOdom::read_ground_truth_poses(const std::string &gt_file_name_){
     
     std::ifstream gt_;
 
+    int cnt = 1; 
+
     gt_.open(gt_file_);
     
     if(gt_.is_open()) {
 
         std::string line_;
 
-        while(std::getline(gt_, line_)){
+        while(std::getline(gt_, line_) ){
 
-            //std::cout << "line: " << line_ << std::endl;
-
+            //float f_;
             double f_;
-
             std::stringstream ss_(line_);
             std::vector<float> v_; 
 
@@ -78,11 +71,6 @@ void VisualOdom::read_ground_truth_poses(const std::string &gt_file_name_){
 
             }
             
-            //std::cout << "v_.size(): " << v_.size() << std::endl; 
-
-            //for(auto t: v_) std::cout << t << " " ;
-            //std::cout << std::endl;
-
             cv::Mat gt_;
             gt_ = cv::Mat(v_).reshape(0, 3);
             gt_.convertTo(gt_, CV_64F);
@@ -90,8 +78,6 @@ void VisualOdom::read_ground_truth_poses(const std::string &gt_file_name_){
             gt_poses_.push_back(gt_);
 
         }
-        
-        //std::cout << P_.size() << " " << P_ << std::endl;
 
     }
 
@@ -102,11 +88,6 @@ void VisualOdom::read_ground_truth_poses(const std::string &gt_file_name_){
         std::cerr << "Unable to read calib file!" << std::endl;
 
     }
-
-    //cv::FileStorage fs_(calib_file_, cv::FileStorage::READ);
-
-    
-
 
 }
 
@@ -119,7 +100,7 @@ void VisualOdom::load_camera_params_matrix(){
 
     cv::decomposeProjectionMatrix(P_, K_, R_, t_);
 
-    std::cout << "P_.size(): " << P_.size() << std::endl; 
+    /*std::cout << "P_.size(): " << P_.size() << std::endl; 
     std::cout << "K_.size(): " << K_.size() << std::endl; 
     
     std::cout << "K_: " << K_ << std::endl;
@@ -130,6 +111,7 @@ void VisualOdom::load_camera_params_matrix(){
     
     std::cout << "t_.size(): " << t_.size() << std::endl;
     std::cout << "t_: " << t_ << std::endl;
+    */
 
 }
 
@@ -176,8 +158,8 @@ void VisualOdom::read_projection_matrix(const std::string &calib_file_name_){
 
         //std::cout << "v_.size(): " << v_.size() << std::endl; 
 
-        for(auto t: v_) std::cout << t << " " ;
-        std::cout << std::endl;
+        //for(auto t: v_) std::cout << t << " " ;
+        //std::cout << std::endl;
 
         //auto *ptr =  v_.data();
 
@@ -342,24 +324,35 @@ double VisualOdom::getAbsoluteScale(int frame_id)	{
     return 0;
     }
 
-    return sqrt((x-x_prev)*(x-x_prev) + (y-y_prev)*(y-y_prev) + (z-z_prev)*(z-z_prev)) ;
+    //std::cout << "x: " << x  << " y: " << y << " z: " << z << std::endl; 
+    //std::cout << "x_prev: " << x_prev << " y_prev: " << y_prev << " z_prev: " << z_prev << std::endl;
+
+    double scale_ =  sqrt((x-x_prev)*(x-x_prev) + (y-y_prev)*(y-y_prev) + (z-z_prev)*(z-z_prev)) ;
+
+    //std::cout << "frame: " << frame_id << "scale: " << scale_ << std::endl;
+
+    return scale_;
 
 }
 
 
 void VisualOdom::run_vo_pipeline(){
 
-    std::cout << "Inside the run_vo_pipeline function!" << std::endl;
+    C_k_minus_1_ = (cv::Mat_<float>(4, 4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0);  //initial camera pose w.r.t to some frame 
+    C_k_minus_1_.convertTo(C_k_minus_1_, CV_64F);
+        
+    //std::cout << "Inside the run_vo_pipeline function!" << std::endl;
 
     int sz_ = image_file_names_.size(); 
 
+    //std::cout << "sz_: " << sz_ << std::endl;
+
     sz_ = 2; 
 
-    std::cout << "K_: " << K_ << std::endl;
+    //std::cout << "K_: " << K_ << std::endl;
 
     for(int i = 0 ; i < sz_ - 1; i++) {
 
-        std::cout << "i: " << i << std::endl;
 
         kp_1.resize(0); 
         kp_2.resize(0); 
@@ -370,41 +363,81 @@ void VisualOdom::run_vo_pipeline(){
         cv::Mat img_1 = cv::imread(image_file_names_[i].c_str());
         cv::Mat img_2 = cv::imread(image_file_names_[i + 1].c_str());
 
-        std::cout << "HI" << std::endl;
-
         extract_features(img_1, img_2);
         match_features(img_1, img_2);
 
-        std::cout << "2" << std::endl;
-        
         cv::Mat E_, mask_, R, t;
 
-        //E_ = cv::findEssentialMat(kp_2_matched, kp_1_matched, focal_, pp_,cv::RANSAC, 0.99, 1.0, mask_);
+
+        std::cout << "kp_1_matched.size(): " << kp_1_matched.size() << std::endl;
+        std::cout << "kp_2_matched.size(): " << kp_2_matched.size() << std::endl;
+
         E_ = cv::findEssentialMat(kp_2_matched, kp_1_matched, K_,cv::RANSAC, 0.99, 1.0, mask_);
         
-        std::cout << "E_: " << E_ << std::endl;
+        //std::cout << "E_: " << E_ << std::endl;
 
-        //cv::recoverPose(E_, visual_odom_.kp_1_matched, visual_odom_.kp_2_matched, R ,t ,visual_odom_.focal_, visual_odom_.pp_, mask_);
         cv::recoverPose(E_, kp_2_matched, kp_1_matched, R ,t ,focal_, pp_, mask_);
 
-        std::cout << "R: " << R << std::endl;
-        std::cout << "t: " << t << std::endl;
+        //std::cout << "R.size(): " << R.size() << std::endl;
+        //std::cout << "t.size(): " << t.size() << std::endl;
 
-            /*std::cout << "E_.size(): " << E_.size() << std::endl; 
-            std::cout << "E_: " << E_ << std::endl;
+        //** building T_k_
+        T_k_ = cv::Mat();
+
+        cv::Mat temp_ = (cv::Mat_<float>(1, 4) << 0, 0, 0, 1); 
+        temp_.convertTo(temp_, CV_64F);
+
+        //std::cout << "R.type(): " << R.type() << std::endl;
+        //std::cout << "t.type(): " << t.type() << std::endl;
+
+        R.convertTo(R, CV_64F);
+        t.convertTo(t, CV_64F);    
+
+        //std::cout << "R.size(): " << R.size() << std::endl;
+        //std::cout << "t.size(): " << t.size() << std::endl;
+
+        double scale_ = getAbsoluteScale(i); 
+
+        //if(scale_ > 0.1 && (t.at<double>(2, 0) > t.at<double>(1, 0)) && (t.at<double>(2, 0) > t.at<double>(0,0))) {
+
+            //std::cout << "t: " << t << std::endl;
+            //std::cout << "scale: " << scale_ << std::endl;
+            t = scale_ * t ; 
+
+            //std::cout << "t: " << t << std::endl;
+
+            cv::hconcat(R, t, T_k_);
             
-            std::cout << "R.size(): " << R.size() << std::endl;
-            std::cout << "R: " << R << std::endl;
+            cv::vconcat(T_k_, temp_, T_k_);
 
-            std::cout << "t.size(): " << t.size() << std::endl;
-            std::cout << "t: " << t << std::endl;
+            std::cout << "T_k: " << T_k_ << std::endl;
 
-            cv::Mat Rt = R * t; 
+            C_k_ =  C_k_minus_1_ * T_k_;
 
-            std::cout <<"Rt.size(): " << Rt.size() << std::endl;
-            std::cout << "Rt: " << Rt << std::endl;
-            */
+            //std::cout << "[" << gt_poses_[i].at<double>(0,3) << "," << gt_poses_[i].at<double>(2,3) <<"] --->" << "[" << C_k_.at<double>(0,3) <<"," << C_k_.at<double>(2, 3) <<"]" <<std::endl;
+            
+            C_k_minus_1_ = C_k_;
+
+        //}
+
+        //else {
+
+          //  C_k_ = C_k_minus_1_;
+
+        //}
+
+        std::cout << "[" << gt_poses_[i].at<double>(0,3) << "," << gt_poses_[i].at<double>(2,3) <<"] --->" << "[" << C_k_.at<double>(0,3) <<"," << C_k_.at<double>(2, 3) <<"]" <<std::endl;
+            
+
     }
+
+    //std::cout << "predicted_poses_.size(): " << (int)predicted_poses_.size() << std::endl;
+
+    /*for(int i = 0; i < 100; i++) {
+        std::cout << "i: " << i << std::endl;
+        std::cout << "[" << gt_poses_[i].at<double>(0,3) << "," << gt_poses_[i].at<double>(2,3) <<"] --->" << "[" << predicted_poses_[i].at<double>(0,3) <<"," << predicted_poses_[i].at<double>(2, 3) <<"]" <<std::endl;
+        
+    }*/
 
 
 }
@@ -412,113 +445,7 @@ void VisualOdom::run_vo_pipeline(){
 
 int main(){
 
-
-
     VisualOdom vo_("abcd");
-
-
-
-    /*VisualOdom visual_odom_("../data/02/image_0/");
-
-    VisualOdom vo_ = visual_odom_;
-
-    //std::cout << visual_odom_.gt_poses_[0].size() << " " << visual_odom_.gt_poses_[0] << std::endl;
-
-    //cv::Mat gt_1 = visual_odom_.gt_poses_[0]; 
-
-    /*std::cout << "gt_1.size(): " << gt_1.size() << std::endl;
-    std::cout << "gt_1: " << gt_1 << std::endl;
-
-
-    int cnt = 10; 
-    while(cnt--) std::cout << std::endl;
-
-    int sz_ = (int)visual_odom_.gt_poses_.size(); 
-    
-    int idx_ =0 ; 
-
-    while(idx_ < sz_ - 1) {
-
-        cv::Mat m_ = visual_odom_.gt_poses_[idx_];
-        std::cout << "(" << m_.at<float>(0,3) << "," << m_.at<float>(1,3) << ","  << m_.at<float>(2,3) << ")" << std::endl;
-        idx_++;
-        
-    }*/
-    
-    /*cv::Mat lpm = cv::Mat(3, 4, CV_32F);
-
-    std::cout << "lpm.size(): " << lpm.size() << std::endl; 
-
-    std::cout << "lpm--> " << lpm <<  std::endl;
-    */
-    /*VisualOdom visual_odom_("../data/02/image_0/");
-
-    int sz_ = (int)visual_odom_.image_path_list_.size(); 
-
-   //sz_ = 2; 
-
-    //TODO: initialize with ground truth
-    
-    cv::Mat T_i, T_f, h_;  //transformation matrices
-
-    cv::Mat X_i, X_f; //camera pose in the world frame
-
-    T_i = (cv::Mat_<double>(4, 4) << 1, 0, 0, 0, 0, 1, 0 , 0, 0, 0 , 1, 0, 0 ,0 ,0 , 1); 
-    h_ = (cv::Mat_<double>(1,4) << 0 , 0, 0, 1); // needed to create the form T = [R| t]
-
-    X_i = (cv::Mat_<double>(4,1) << 0 , 0, 0 , 1);
-
-    */  
-
-  // int sz_ = (int)visual_odom_.image_path_list_.size();
-
-   /*(std::cout << "sz_: " << sz_ << std::endl;
-
-    sz_ = 2; 
-
-    for(int i = 0 ; i < sz_ - 1; i++) {
-
-        visual_odom_.kp_1.resize(0); 
-        visual_odom_.kp_2.resize(0); 
-
-        visual_odom_.kp_1_matched.resize(0); 
-        visual_odom_.kp_2_matched.resize(0);
-    
-        cv::Mat img_1 = cv::imread(visual_odom_.image_path_list_[i].c_str());
-        cv::Mat img_2 = cv::imread(visual_odom_.image_path_list_[i + 1].c_str());
-
-        visual_odom_.extract_features(img_1, img_2);
-        visual_odom_.match_features(img_1, img_2);
-        
-        cv::Mat E_, mask_, R, t;
-
-        //E_ = cv::findEssentialMat(visual_odom_.kp_1_matched, visual_odom_.kp_2_matched, visual_odom_.focal_, visual_odom_.pp_,cv::RANSAC, 0.99, 1.0, mask_);
-        E_ = cv::findEssentialMat(visual_odom_.kp_2_matched, visual_odom_.kp_1_matched, visual_odom_.focal_, visual_odom_.pp_,cv::RANSAC, 0.99, 1.0, mask_);
-        
-        //cv::recoverPose(E_, visual_odom_.kp_1_matched, visual_odom_.kp_2_matched, R ,t ,visual_odom_.focal_, visual_odom_.pp_, mask_);
-        cv::recoverPose(E_, visual_odom_.kp_2_matched, visual_odom_.kp_1_matched, R ,t ,visual_odom_.focal_, visual_odom_.pp_, mask_);
-
-            std::cout << "E_.size(): " << E_.size() << std::endl; 
-            std::cout << "E_: " << E_ << std::endl;
-            
-            std::cout << "R.size(): " << R.size() << std::endl;
-            std::cout << "R: " << R << std::endl;
-
-            std::cout << "t.size(): " << t.size() << std::endl;
-            std::cout << "t: " << t << std::endl;
-
-            cv::Mat Rt = R * t; 
-
-            std::cout <<"Rt.size(): " << Rt.size() << std::endl;
-            std::cout << "Rt: " << Rt << std::endl;
-         
-
-
-
-
-    }*/
-
-    
 
     return 0;
 
