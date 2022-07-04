@@ -53,6 +53,13 @@ cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
 
 */
 
+/*
+
+Implementation Pipeline - 
+
+
+*/
+
 class VisualOdom{
 
 
@@ -64,12 +71,17 @@ class VisualOdom{
         void load_camera_params_matrix(); 
         void read_ground_truth_poses(const std::string &file_name_);
 
+
         //** camera movement functions
         void calculate_camera_poses(); //calcula
+        
+
 
         //** to be refactored
         void run_vo_pipeline();
-
+        void run_pipeline();
+        //void play_video();
+        
 
     public:     
 
