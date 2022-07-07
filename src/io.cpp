@@ -5,7 +5,7 @@
 void VisualOdom::process_data_files(){
 
     calib_file_name_ = "calib.txt";
-    gt_file_name_ = "02.txt";
+    gt_file_name_ = "00.txt";
     image_dir_ = "image_0/";
     
     read_projection_matrix(calib_file_name_);

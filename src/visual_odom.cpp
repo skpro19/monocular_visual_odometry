@@ -9,12 +9,12 @@
 VisualOdom::VisualOdom(const std::string &folder_){
 
     base_dir_ = "/home/skpro19/simple_visual_odom/";
-    data_dir_ = base_dir_ + "data/02/";
+    data_dir_ = base_dir_ + "data/00/";
     
     
     process_data_files();
 
-    run_pipeline();
+    run_vo_pipeline();
 
     //read_projection_matrix();
     //read_ground_truth_poses();
@@ -127,9 +127,9 @@ void VisualOdom::match_features(const cv::Mat &img_1, const cv::Mat &img_2){
     }
 
     
-    cv::imshow("img",img_1);
+    //cv::imshow("img",img_1);
     
-    cv::waitKey(10);
+    //cv::waitKey(10);
     
 }
 
