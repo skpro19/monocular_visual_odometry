@@ -19,11 +19,10 @@ void VisualOdom::read_projection_matrix(const std::string &calib_file_name_){
 
     std::string calib_file_ = data_dir_ + calib_file_name_;
     
-    //std::cout << "calib_file_: " << calib_file_ << std::endl;
-
     std::ifstream calib_;
 
     calib_.open(calib_file_);
+    
     if(calib_.is_open()) {
 
         std::string line_;

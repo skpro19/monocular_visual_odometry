@@ -101,7 +101,10 @@ class VisualOdom{
         std::vector<cv::KeyPoint> kp_1, kp_2; 
 
         
-        std::vector<cv::Point2f> kp_1_matched, kp_2_matched; 
+        //std::vector<cv::Point2f> kp_1_matched, kp_2_matched; 
+        std::vector<cv::KeyPoint> kp_1_matched, kp_2_matched; 
+    
+        
 
         double focal_ ; 
         cv::Point2d pp_;
@@ -132,6 +135,8 @@ class VisualOdom{
         cv::Mat T_k_; //relates the transform between the camera poses C_k_minus_1_ and 
 
 
+        //*** tuning params
+        int good_matches_size_ = 10;
 
 
 };  

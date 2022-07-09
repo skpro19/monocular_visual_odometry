@@ -8,6 +8,9 @@
 //VisualOdom::VisualOdom(const std::string &folder_):image_folder_{folder_}{
 VisualOdom::VisualOdom(const std::string &folder_){
 
+
+    std::cout << "version: " << CV_VERSION << std::endl;
+
     base_dir_ = "/home/skpro19/simple_visual_odom/";
     data_dir_ = base_dir_ + "data/00/";
     
@@ -66,7 +69,9 @@ void VisualOdom::extract_features(const cv::Mat &img_1, const cv::Mat &img_2){
 
 void VisualOdom::match_features(const cv::Mat &img_1, const cv::Mat &img_2){
     
-    
+    kp_1_matched.clear(); 
+    kp_2_matched.clear();
+
     cv::Mat image_one, image_two;
     cv::cvtColor(img_1, image_one, cv::COLOR_BGR2GRAY);
     cv::cvtColor(img_2, image_two, cv::COLOR_BGR2GRAY);
@@ -74,16 +79,12 @@ void VisualOdom::match_features(const cv::Mat &img_1, const cv::Mat &img_2){
     cv::Mat mask = cv::Mat();
     cv::Mat des_1, des_2;
     
-    //cv::Ptr<cv::ORB>orb_ = cv::ORB::create(5000);
     cv::Ptr<cv::ORB>orb_ = cv::ORB::create(5000);
 
-    
-    
     //*** extracting descriptors from keypoints
     orb_->detectAndCompute(image_one, mask, kp_1, des_1);
     orb_->detectAndCompute(image_two, mask, kp_2, des_2);
-    
-    
+        
     des_1.convertTo(des_1, 0);
     des_2.convertTo(des_2, 0);
     
@@ -111,22 +112,65 @@ void VisualOdom::match_features(const cv::Mat &img_1, const cv::Mat &img_2){
         }
     }
 
+    std::vector<cv::DMatch> best_matches_ = good_matches;
 
-    for (auto match : good_matches) {
+    //** extracting the best 10 matches            
+    
+    /*
+    std::sort(best_matches_.begin(), best_matches_.end(), [](const cv::DMatch &a_, const cv::DMatch &b_) -> bool{
+
+        return a_.distance < b_.distance;
+
+    });
+
+    
+    int sz_ = (int)best_matches_.size(); 
+
+    if(sz_ > good_matches_size_) {
+
+        best_matches_.erase(best_matches_.begin() + 10, best_matches_.end());
+
+    }
+
+    sz_ = (int)best_matches_.size(); 
+
+    //std::cout << "best_matches.size(): " << best_matches_.size() << std::endl;
+
+    for (auto match : best_matches_) {
         
         kp_1_matched.push_back(cv::Point2f{kp_1[match.queryIdx].pt.x, kp_1[match.queryIdx].pt.y}); 
         kp_2_matched.push_back(cv::Point2f{kp_2[match.trainIdx].pt.x, kp_2[match.trainIdx].pt.y}); 
         
     }
+    
+    */
 
     for (auto match : good_matches) {
+        
+        //kp_1_matched.push_back(cv::Point2f{kp_1[match.queryIdx].pt.x, kp_1[match.queryIdx].pt.y}); 
+        //kp_2_matched.push_back(cv::Point2f{kp_2[match.trainIdx].pt.x, kp_2[match.trainIdx].pt.y}); 
+
+        kp_1_matched.push_back(kp_1[match.queryIdx]);
+        kp_2_matched.push_back(kp_2[match.trainIdx]);
+
+    }
+
+    
+    
+    /*for (auto match : good_matches) {
 
         cv::circle( img_1, kp_1[match.queryIdx].pt, 2, cv::Scalar( 0, 255, 0), -1 );
         cv::circle( img_1, kp_2[match.trainIdx].pt, 2, cv::Scalar( 255, 0, 0), -1 );
         cv::line(img_1, kp_1[match.queryIdx].pt, kp_2[match.trainIdx].pt, cv::Scalar(0, 255,0));
+    }*/
+
+    for (auto match : best_matches_) {
+
+        //cv::circle( img_1, kp_1[match.queryIdx].pt, 2, cv::Scalar( 0, 255, 0), -1 );
+        //cv::circle( img_1, kp_2[match.trainIdx].pt, 2, cv::Scalar( 255, 0, 0), -1 );
+        //cv::line(img_1, kp_1[match.queryIdx].pt, kp_2[match.trainIdx].pt, cv::Scalar(0, 255,0));
     }
 
-    
     //cv::imshow("img",img_1);
     
     //cv::waitKey(10);
