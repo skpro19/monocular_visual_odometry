@@ -24,22 +24,16 @@
 //TODO:
 /*
 
+- Rename visual_odom.cpp to feature_processing
 - Create proejction matrix 
 cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
 
     
-    float fx = fSettings["Camera.fx"];
-    float fy = fSettings["Camera.fy"];
-    float cx = fSettings["Camera.cx"];
-    float cy = fSettings["Camera.cy"];
-    float bf = fSettings["Camera.bf"];
 
-    cv::Mat projMatrl = (cv::Mat_<float>(3, 4) << fx, 0., cx, 0., 0., fy, cy, 0., 0,  0., 1., 0.);
-    cv::Mat projMatrr = (cv::Mat_<float>(3, 4) << fx, 0., cx, bf, 0., fy, cy, 0., 0,  0., 1., 0.);
-
-    use glob
-    use cv::decomposeProjectionMatrix to decompose P =  [K R t]
-    import gt in  a gt_matrix
+    
+    //use glob
+    //use cv::decomposeProjectionMatrix to decompose P =  [K R t]
+    //import gt in  a gt_matrix
 
      Mat H = convertToHomogeneousMat(R_trans, T_trans);
 
@@ -49,7 +43,9 @@ cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
 
     GNUPlot
 
-    add ransac visualization
+    remove kp_1, kp_1_matched from global variables --- potential source of error
+
+    //add ransac visualization
 
 */
 
@@ -65,7 +61,10 @@ class VisualOdom{
 
     private:
 
-        //**input functions
+        //**visualiztion_helpers.cpp
+        void draw_trajectory_windows(const cv::Mat &C_k_, int i);
+
+        //**io.cpp
         void process_data_files();
         void read_projection_matrix(const std::string &file_name_);
         void load_camera_params_matrix(); 
@@ -100,25 +99,13 @@ class VisualOdom{
         std::vector<boost::filesystem::path> image_path_list_; 
         std::vector<cv::KeyPoint> kp_1, kp_2; 
 
-        
-        //std::vector<cv::Point2f> kp_1_matched, kp_2_matched; 
         std::vector<cv::KeyPoint> kp_1_matched, kp_2_matched; 
-    
-        
-
-        double focal_ ; 
-        cv::Point2d pp_;
-
-        //** data vars
-        std::vector<cv::Mat> gt_poses_;
-        std::vector<cv::Mat> predicted_poses_;
-        
-        
         
         cv::Mat P_; //camera projection matrix -> [3 * 4]
         cv::Mat K_; //camera intrinsics matrix [3 * 3]
         cv::Mat R_; //camera axis rotation w.r.t. world 
         cv::Mat t_; //camera axis translation w.r.t. world 
+
 
         //** file input vars
         std::string base_dir_; 
@@ -126,18 +113,28 @@ class VisualOdom{
         std::string image_dir_;
         std::string calib_file_name_;
         std::string gt_file_name_;
-        
         std::vector<cv::String> image_file_names_;
+
+        //** data vars
+        std::vector<cv::Mat> gt_poses_;
+        std::vector<cv::Mat> predicted_poses_;
+        
 
         //** camera translation params
          //C_k = C_k_minus_1_ * T_k_
         cv::Mat C_k_, C_k_minus_1_; //kth camera pose in the same frame as C_0_  
-        cv::Mat T_k_; //relates the transform between the camera poses C_k_minus_1_ and 
+        cv::Mat T_k_; //relates the transform between the camera poses C_k_minus_1_ and C_k_
 
 
         //*** tuning params
         int good_matches_size_ = 10;
+        //TODO add ransac parameters here from the findEssentialMat function
 
+
+        //**visualization vars
+        cv::Mat predictions_mat_ = cv::Mat::zeros(600, 600, CV_8UC3);
+        cv::Mat gt_mat_ = cv::Mat::zeros(600, 600, CV_8UC3);
+    
 
 };  
 

@@ -14,7 +14,13 @@ add_definitions(
     -DBOOST_ERROR_CODE_HEADER_ONLY=1
 )
 
-add_executable(simple_visual_odom src/visual_odom.cpp src/io.cpp src/main.cpp src/vo_pipeline.cpp)
+add_executable(simple_visual_odom
+    src/visual_odom.cpp
+    src/io.cpp
+    src/main.cpp
+    src/vo_pipeline.cpp
+    src/visualization_helpers.cpp)
+
 target_link_libraries(simple_visual_odom
     ${OpenCV_LIBS}
     boost_system

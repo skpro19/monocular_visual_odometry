@@ -4,20 +4,14 @@
 void VisualOdom::run_vo_pipeline(){
 
 
-    cv::Mat predictions_mat_ = cv::Mat::zeros(600, 600, CV_8UC3);
-    cv::Mat gt_mat_ = cv::Mat::zeros(600, 600, CV_8UC3);
-    
+   
     //cv::namedWindow( "Predictions", cv::WINDOW_AUTOSIZE );
     //cv::namedWindow( "Ground Truth", cv::WINDOW_AUTOSIZE );
-
-
 
     C_k_minus_1_ = (cv::Mat_<float>(4, 4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0);  //initial camera pose w.r.t to some frame 
     C_k_minus_1_.convertTo(C_k_minus_1_, CV_64F);
 
     int sz_ = image_file_names_.size(); 
-
-
 
     for(int i = 0 ; i < sz_ - 1; i++) {
 
@@ -71,10 +65,7 @@ void VisualOdom::run_vo_pipeline(){
             if(val_ > 0) {
 
                 cv::Point2f p1_ = kp_1_matched[j].pt;
-                //cv::circle( img_1, p1_, 2, cv::Scalar(255, 255 ,255), -1 );
-               //cv::circle( img_1, p1_, 2, cv::Scalar( 203, 192, 100), -1 ); 
-                //cv::circle( img_1, p1_, 2, cv::Scalar( 147, 20, 255), -1 ); 
-                cv::circle( img_1, p1_, 2, cv::Scalar( 0, 255, 255), -1 ); 
+                cv::circle( img_1, p1_, 2, cv::Scalar( 0, 255, 255), -1 );
             
             }
 
@@ -115,7 +106,7 @@ void VisualOdom::run_vo_pipeline(){
 
        // std::cout << "kp_2_matched.size(): " << kp_2_matched.size() << std::endl;
 
-        if(scale_ > 0.1 && (t.at<double>(2, 0) > t.at<double>(1, 0)) && (t.at<double>(2, 0) > t.at<double>(0,0))) {
+        /*if(scale_ > 0.1 && (t.at<double>(2, 0) > t.at<double>(1, 0)) && (t.at<double>(2, 0) > t.at<double>(0,0))) {
 
             //std::cout << "t: " << t << std::endl;
             //std::cout << "scale: " << scale_ << std::endl;
@@ -141,53 +132,18 @@ void VisualOdom::run_vo_pipeline(){
 
             C_k_ = C_k_minus_1_;
 
-        }
+        }*/
 
-        //std::cout << "[" << gt_poses_[i].at<double>(0,3) << "," << gt_poses_[i].at<double>(2,3) <<"] --->" << "[" << C_k_.at<double>(0,3) <<"," << C_k_.at<double>(2, 3) <<"]" <<std::endl;
-        
-        //t = 4 * t;
+        cv::hconcat(R, t, T_k_);            
+        cv::vconcat(T_k_, temp_, T_k_);
 
-        //cv::hconcat(R, t, T_k_);
-            
-        //cv::vconcat(T_k_, temp_, T_k_);
+        C_k_ =  C_k_minus_1_ * T_k_;
+        C_k_minus_1_ = C_k_;
 
-        //std::cout << "T_k: " << T_k_ << std::endl;
 
-        //C_k_ =  C_k_minus_1_ * T_k_;
+        draw_trajectory_windows(C_k_, i);
 
-        //std::cout << "[" << gt_poses_[i].at<double>(0,3) << "," << gt_poses_[i].at<double>(2,3) <<"] --->" << "[" << C_k_.at<double>(0,3) <<"," << C_k_.at<double>(2, 3) <<"]" <<std::endl;
-        
-        //C_k_minus_1_ = C_k_;
-        
 
-        //*** visualization code
-
-        
-        //** ground truth poses
-        double gx_ = gt_poses_[i].at<double>(0,3) + 200;
-        double gy_ = gt_poses_[i].at<double>(2,3) + 200;
-
-        //std::cout <<"(" << gx_ << "," << gy_ << ")" << std::endl;
-        //** predicted poses
-        double px_ =  C_k_.at<double>(0,3) + 200;
-        double py_ = C_k_.at<double>(2,3) + 200;
-
-        //cv::namedWindow("gt_poses", cv::WINDOW_AUTOSIZE);
-        //cv::rectangle( traj, cv::Point(10, 30), cv::Point(550, 50), CV_RGB(0,0,0), -1);
-        cv::circle(predictions_mat_, cv::Point(px_, py_) ,1, CV_RGB(255,0,0), 2);
-        cv::circle(gt_mat_, cv::Point(gx_, gy_) ,1, CV_RGB(255,255, 255), 2);
-        
-        //cv::imshow("Predictions", predictions_mat_);
-        //cv::imshow("Ground Truth", gt_mat_);
-
-        //cv::Mat combined_mat_ = gt_mat_ + predictions_mat_;
-        cv::Mat combined_mat_ ;
-        cv::hconcat(gt_mat_, predictions_mat_, combined_mat_);
-        
-        cv::imshow("Ground Truth", combined_mat_);
-    
-        //cv::imshow("Ground Truth", traj);
-        
         cv::waitKey(1);
 
     }
