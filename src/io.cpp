@@ -78,25 +78,15 @@ void VisualOdom::read_projection_matrix(const std::string &calib_file_name_){
 
 
 /**
- * @brief decompose P = K[R|t]
+ * @brief decompose P = K[R|t]  <--- extracting camera intrinsics and extrincics from the Projection Matrix
+ *
  * 
  */
 void VisualOdom::load_camera_params_matrix(){
 
     cv::decomposeProjectionMatrix(P_, K_, R_, t_);
 
-    /*std::cout << "P_.size(): " << P_.size() << std::endl; 
-    std::cout << "K_.size(): " << K_.size() << std::endl; 
-    
     std::cout << "K_: " << K_ << std::endl;
-    
-
-    std::cout << "R_.size(): " << R_.size() << std::endl;
-    std::cout << "R_: " << R_ << std::endl; 
-    
-    std::cout << "t_.size(): " << t_.size() << std::endl;
-    std::cout << "t_: " << t_ << std::endl;
-    */
 
 }
 

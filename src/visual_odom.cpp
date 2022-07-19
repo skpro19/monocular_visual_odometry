@@ -95,7 +95,7 @@ void VisualOdom::match_features(const cv::Mat &img_1, const cv::Mat &img_2){
 
     double min_dist=10000, max_dist=0;
 
-    for ( int i = 0; i < des_1.rows; i++ )
+    for ( int i = 0; i < des_1. rows; i++ )
     {
         double dist = brute_hamming_matches[i].distance;
         if ( dist < min_dist ) min_dist = dist;
@@ -112,11 +112,11 @@ void VisualOdom::match_features(const cv::Mat &img_1, const cv::Mat &img_2){
         }
     }
 
-    std::vector<cv::DMatch> best_matches_ = good_matches;
+    /*sstd::vector<cv::DMatch> best_matches_ = good_matches;
 
     //** extracting the best 10 matches            
     
-    /*
+    
     std::sort(best_matches_.begin(), best_matches_.end(), [](const cv::DMatch &a_, const cv::DMatch &b_) -> bool{
 
         return a_.distance < b_.distance;
@@ -133,47 +133,17 @@ void VisualOdom::match_features(const cv::Mat &img_1, const cv::Mat &img_2){
     }
 
     sz_ = (int)best_matches_.size(); 
-
-    //std::cout << "best_matches.size(): " << best_matches_.size() << std::endl;
-
-    for (auto match : best_matches_) {
-        
-        kp_1_matched.push_back(cv::Point2f{kp_1[match.queryIdx].pt.x, kp_1[match.queryIdx].pt.y}); 
-        kp_2_matched.push_back(cv::Point2f{kp_2[match.trainIdx].pt.x, kp_2[match.trainIdx].pt.y}); 
-        
-    }
-    
-    */
+   */
 
     for (auto match : good_matches) {
         
-        //kp_1_matched.push_back(cv::Point2f{kp_1[match.queryIdx].pt.x, kp_1[match.queryIdx].pt.y}); 
-        //kp_2_matched.push_back(cv::Point2f{kp_2[match.trainIdx].pt.x, kp_2[match.trainIdx].pt.y}); 
-
         kp_1_matched.push_back(kp_1[match.queryIdx]);
         kp_2_matched.push_back(kp_2[match.trainIdx]);
 
     }
 
     
-    
-    /*for (auto match : good_matches) {
 
-        cv::circle( img_1, kp_1[match.queryIdx].pt, 2, cv::Scalar( 0, 255, 0), -1 );
-        cv::circle( img_1, kp_2[match.trainIdx].pt, 2, cv::Scalar( 255, 0, 0), -1 );
-        cv::line(img_1, kp_1[match.queryIdx].pt, kp_2[match.trainIdx].pt, cv::Scalar(0, 255,0));
-    }*/
-
-    for (auto match : best_matches_) {
-
-        //cv::circle( img_1, kp_1[match.queryIdx].pt, 2, cv::Scalar( 0, 255, 0), -1 );
-        //cv::circle( img_1, kp_2[match.trainIdx].pt, 2, cv::Scalar( 255, 0, 0), -1 );
-        //cv::line(img_1, kp_1[match.queryIdx].pt, kp_2[match.trainIdx].pt, cv::Scalar(0, 255,0));
-    }
-
-    //cv::imshow("img",img_1);
-    
-    //cv::waitKey(10);
     
 }
 

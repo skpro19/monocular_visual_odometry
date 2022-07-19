@@ -26,7 +26,9 @@
 
 - Rename visual_odom.cpp to feature_processing
 - Create proejction matrix 
-cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
+- cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
+- Reduce the number of global variables in VisualOdom class
+- Write static class for each of the source files
 
     
 
@@ -122,13 +124,19 @@ class VisualOdom{
 
         //** camera translation params
          //C_k = C_k_minus_1_ * T_k_
-        cv::Mat C_k_, C_k_minus_1_; //kth camera pose in the same frame as C_0_  
+        cv::Mat C_k_, C_k_minus_1_; //C_k -> camera pose in the kth frame w.r.t. intial frame
         cv::Mat T_k_; //relates the transform between the camera poses C_k_minus_1_ and C_k_
 
 
         //*** tuning params
         int good_matches_size_ = 10;
-        //TODO add ransac parameters here from the findEssentialMat function
+        //TODO 
+        /*
+        
+        - add ransac parameters here from the findEssentialMat function
+        - orb params tuning
+        
+        */
 
 
         //**visualization vars
