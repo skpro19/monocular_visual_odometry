@@ -4,7 +4,13 @@
 
 void VisualOdom::process_data_files(){
 
+    std::cout << "Inside process_data_files function!"  << std::endl;
+
     calib_file_name_ = "calib.txt";
+    //gt_file_name_ = "00.txt";
+    //data_dir_ = base_dir_ + "data/00/";
+    
+    data_dir_ = base_dir_ + "data/00/";
     gt_file_name_ = "00.txt";
     image_dir_ = "image_0/";
     

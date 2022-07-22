@@ -12,7 +12,7 @@ VisualOdom::VisualOdom(const std::string &folder_){
     std::cout << "version: " << CV_VERSION << std::endl;
 
     base_dir_ = "/home/skpro19/simple_visual_odom/";
-    data_dir_ = base_dir_ + "data/00/";
+    //data_dir_ = base_dir_ + "data/00/";
     
     
     process_data_files();
@@ -145,6 +145,8 @@ void VisualOdom::match_features(const cv::Mat &img_1, const cv::Mat &img_2){
     
 
     
+
+    
 }
 
 double VisualOdom::getAbsoluteScale(int frame_id)	{
@@ -186,6 +188,7 @@ double VisualOdom::getAbsoluteScale(int frame_id)	{
     //std::cout << "x_prev: " << x_prev << " y_prev: " << y_prev << " z_prev: " << z_prev << std::endl;
 
     double scale_ =  sqrt((x-x_prev)*(x-x_prev) + (y-y_prev)*(y-y_prev) + (z-z_prev)*(z-z_prev)) ;
+    //double scale_ =  sqrt((z-z_prev)*(z-z_prev)) ;
 
     //std::cout << "frame: " << frame_id << "scale: " << scale_ << std::endl;
 

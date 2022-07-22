@@ -65,6 +65,8 @@ class VisualOdom{
 
         //**visualiztion_helpers.cpp
         void draw_trajectory_windows(const cv::Mat &C_k_, int i);
+        void draw_trajectory_windows_mod(const cv::Mat &C_k_, int i);
+
 
         //**io.cpp
         void process_data_files();
@@ -99,10 +101,15 @@ class VisualOdom{
         std::string image_folder_;  
         
         std::vector<boost::filesystem::path> image_path_list_; 
-        std::vector<cv::KeyPoint> kp_1, kp_2; 
-
+        std::vector<cv::KeyPoint> kp_1, kp_2;
         std::vector<cv::KeyPoint> kp_1_matched, kp_2_matched; 
-        
+
+
+        //*** keypoints under consideration for feature matching
+        std::vector<cv::KeyPoint> curr_kps_, prev_kps_;
+
+
+        //*** camera params
         cv::Mat P_; //camera projection matrix -> [3 * 4]
         cv::Mat K_; //camera intrinsics matrix [3 * 3]
         cv::Mat R_; //camera axis rotation w.r.t. world 
@@ -140,8 +147,8 @@ class VisualOdom{
 
 
         //**visualization vars
-        cv::Mat predictions_mat_ = cv::Mat::zeros(600, 600, CV_8UC3);
-        cv::Mat gt_mat_ = cv::Mat::zeros(600, 600, CV_8UC3);
+        cv::Mat predictions_mat_ = cv::Mat::zeros(1000, 1000, CV_8UC3);
+        cv::Mat gt_mat_ = cv::Mat::zeros(1000, 1000, CV_8UC3);
     
 
 };  
