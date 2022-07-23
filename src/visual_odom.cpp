@@ -149,6 +149,21 @@ void VisualOdom::match_features(const cv::Mat &img_1, const cv::Mat &img_2){
     
 }
 
+double VisualOdom::get_z_scale(int curr_idx_, int prev_idx_) {
+
+    cv::Mat prev_poses_ = gt_poses_[prev_idx_];
+    cv::Mat curr_poses_ = gt_poses_[curr_idx_]; 
+
+    cv::Point3d prev_point_ = {prev_poses_.at<double>(0,3), prev_poses_.at<double>(1,3), prev_poses_.at<double>(2,3)};
+    cv::Point3d curr_point_ = {curr_poses_.at<double>(0,3), curr_poses_.at<double>(1,3), curr_poses_.at<double>(2,3)};
+    cv::Point3d diff_ = (curr_point_ - prev_point_);
+
+    double scale_ = std::sqrt(diff_.z * diff_.z);
+
+    return scale_;
+
+}
+
 double VisualOdom::getScale(int curr_idx_, int prev_idx_) {
 
     cv::Mat prev_poses_ = gt_poses_[prev_idx_];

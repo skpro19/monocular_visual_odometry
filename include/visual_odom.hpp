@@ -152,7 +152,7 @@ class VisualOdom{
 
 
         double getScale(int curr_idx_, int prev_idx_);
-
+        double get_z_scale(int curr_idx_, int prev_idx_);
 
 };  
 

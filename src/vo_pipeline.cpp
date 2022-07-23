@@ -59,16 +59,17 @@ void VisualOdom::run_vo_pipeline(){
     //std::cout << "C_k_minus_1_.size(): " << C_k_minus_1_.size() << std::endl;
     //std::cout << "C_k_minus_1_: " << C_k_minus_1_ << std::endl;
 
-    int last_idx_;
+    int last_idx_ = 0 ;
 
     int sz_ = image_file_names_.size(); 
 
+    int mn_inlier_cnt_ = 1000;
 
-    for(int i = 400 ; i < sz_  - 1; i++) {
+    for(int i = 1 ; i < sz_; i++) {
 
         //std::cout << "i: " << i << std::endl;
 
-        last_idx_ = i -1; 
+        //last_idx_ = i -1; 
 
         kp_1.resize(0); 
         kp_2.resize(0); 
@@ -76,22 +77,13 @@ void VisualOdom::run_vo_pipeline(){
         kp_1_matched.resize(0); 
         kp_2_matched.resize(0);
     
-        cv::Mat img_1 = cv::imread(image_file_names_[i].c_str());
-        cv::Mat img_2 = cv::imread(image_file_names_[i + 1 ].c_str());
+        cv::Mat img_1 = cv::imread(image_file_names_[last_idx_].c_str());
+        cv::Mat img_2 = cv::imread(image_file_names_[i].c_str());
 
         extract_features(img_1, img_2);
         match_features(img_1, img_2);
 
         assert((int)kp_1_matched.size() == (int)kp_2_matched.size());
-
-        if(i == 0) {
-
-            prev_kps_ = kp_1_matched;
-
-        }
-
-        curr_kps_ = kp_2_matched;
-
 
         std::vector<cv::Point2f> kp_1f, kp_2f; //array of keypoint co-ordinates
 
@@ -116,36 +108,37 @@ void VisualOdom::run_vo_pipeline(){
 
         E_ = cv::findEssentialMat(kp_2f, kp_1f, K_,cv::RANSAC, 0.999, 1.0, E_mask_);
 
-        std::cout << "E_mask_: " << E_mask_.size() << std::endl;
-
+        
         int inlier_cnt_ =0 ; 
 
         cv::imshow("img1", img_1);
 
         inlier_cnt_ = cv::recoverPose(E_, kp_2f, kp_1f, K_, R, t, E_mask_);
 
+        mn_inlier_cnt_ = std::min(mn_inlier_cnt_, inlier_cnt_);
+
         std::cout << "inlier_cnt_: " << inlier_cnt_ << std::endl;
 
-        std::cout << "E_mask_.size(): " << E_mask_.size() << std::endl;
+        double scale_;
 
-        /*if(inlier_cnt_ < 200) {
-
-            std::cout << "INLIER CNT < 50 --> " << inlier_cnt_ << "------ IGNORING!" << std::endl;
-
-        }*/
-
-        //double scale_ = getAbsoluteScale(i); 
-        double scale_ = getScale(i, last_idx_); 
+        double del_z_ = std::fabs(t.at<double>(2,0)); 
+        double del_y_ = std::fabs(t.at<double>(1,0));
+        double del_x_ = std::fabs(t.at<double>(0,0));
         
-        bool flag_ = ((scale_ > 0.1) &&  (t.at<double>(2,0) > t.at<double>(0, 0)) && (t.at<double>(2, 0) > t.at<double>(1,0)))  ; 
+        
+        if(inlier_cnt_ < 25) {continue;}
 
-        //bool flag_ = ((scale_ > 0.1) &&  (t.at<double>(2,0) > t.at<double>(0, 0)) && (t.at<double>(2, 0) > t.at<double>(1,0)) && t.at<double>(2,0) > 0.1)  ; 
+        scale_ = getScale(i, last_idx_); 
 
-        std::cout <<"scale_: " << scale_ << std::endl;
+        bool flag_ = ((scale_ > 0.1) &&  (del_z_ > del_x_) && (del_z_ > del_y_))  ; 
+        
+        //std::cout <<"scale_: " << scale_ << std::endl;
 
         std::cout << std::endl;
 
         if(!flag_) {continue; ;}
+
+        last_idx_ = i;
 
         
         cv::Mat temp_ = (cv::Mat_<double>(1, 4) << 0, 0, 0, 1); 
@@ -162,18 +155,9 @@ void VisualOdom::run_vo_pipeline(){
         C_k_minus_1_ = C_k_;
 
         std::cout <<  i << "--->[x y z]: " << "(" <<C_k_.at<double>(0, 3) << "," << C_k_.at<double>(1, 3) << "," << C_k_.at<double>(2,3) << ")" << std::endl; 
-        //std::cout << "Case Two: " << "(" <<C_k_.at<double>(0, 3)/C_k_.at<double>(3, 3) << "," << C_k_.at<double>(2, 3)/C_k_.at<double>(3,3) << ")" << std::endl;
-        //std::cout << "Case Two: " << "(" <<C_k_.at<double>(0, 3) << "," << C_k_.at<double>(1, 3) << "," << C_k_.at<double>(2,3) << ")" << " ";
-        //std::cout << "(" <<C_k_.at<double>(0, 3) << "," << C_k_.at<double>(1, 3) << "," << C_k_.at<double>(2,3) << ")" << std::endl << std::endl;
-        //v_ = rotationMatrixToEulerAngles(R_f);
-
-        //std::cout << "v_: " << v_ << std::endl;
-
-        //std::cout << "Case Three: " << "(" <<gt_poses_[i].at<double>(0, 3)<< "," << gt_poses_[i].at<double>(2, 3)<< ")" << std::endl;
-
-       draw_trajectory_windows(C_k_, i);
-        //draw_trajectory_windows_mod(t_f, i);
-    
+        draw_trajectory_windows(C_k_, i);
+        
+        
     }
 
 }
