@@ -59,13 +59,16 @@ void VisualOdom::run_vo_pipeline(){
     //std::cout << "C_k_minus_1_.size(): " << C_k_minus_1_.size() << std::endl;
     //std::cout << "C_k_minus_1_: " << C_k_minus_1_ << std::endl;
 
-
+    int last_idx_;
 
     int sz_ = image_file_names_.size(); 
 
-    for(int i = 0 ; i < sz_  - 1; i++) {
+
+    for(int i = 400 ; i < sz_  - 1; i++) {
 
         //std::cout << "i: " << i << std::endl;
+
+        last_idx_ = i -1; 
 
         kp_1.resize(0); 
         kp_2.resize(0); 
@@ -91,6 +94,7 @@ void VisualOdom::run_vo_pipeline(){
 
 
         std::vector<cv::Point2f> kp_1f, kp_2f; //array of keypoint co-ordinates
+
 
         //converting vector<Keypoints> to vector<Point2f>
         for(int k = 0; k < (int)kp_1_matched.size(); k++) {
@@ -131,7 +135,7 @@ void VisualOdom::run_vo_pipeline(){
         }*/
 
         //double scale_ = getAbsoluteScale(i); 
-        double scale_ = getScale(i); 
+        double scale_ = getScale(i, last_idx_); 
         
         bool flag_ = ((scale_ > 0.1) &&  (t.at<double>(2,0) > t.at<double>(0, 0)) && (t.at<double>(2, 0) > t.at<double>(1,0)))  ; 
 
@@ -157,6 +161,7 @@ void VisualOdom::run_vo_pipeline(){
         C_k_ =  C_k_minus_1_ * T_k_;
         C_k_minus_1_ = C_k_;
 
+        std::cout <<  i << "--->[x y z]: " << "(" <<C_k_.at<double>(0, 3) << "," << C_k_.at<double>(1, 3) << "," << C_k_.at<double>(2,3) << ")" << std::endl; 
         //std::cout << "Case Two: " << "(" <<C_k_.at<double>(0, 3)/C_k_.at<double>(3, 3) << "," << C_k_.at<double>(2, 3)/C_k_.at<double>(3,3) << ")" << std::endl;
         //std::cout << "Case Two: " << "(" <<C_k_.at<double>(0, 3) << "," << C_k_.at<double>(1, 3) << "," << C_k_.at<double>(2,3) << ")" << " ";
         //std::cout << "(" <<C_k_.at<double>(0, 3) << "," << C_k_.at<double>(1, 3) << "," << C_k_.at<double>(2,3) << ")" << std::endl << std::endl;
