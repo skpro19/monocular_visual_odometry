@@ -20,8 +20,8 @@ void VisualOdom::draw_trajectory_windows(const cv::Mat &mat_, int i){
     cv::Mat combined_mat_ = gt_mat_ + predictions_mat_;
     cv::hconcat(gt_mat_, predictions_mat_, combined_mat_);
     
-    //cv::imshow("Ground Truth", combined_mat_);
-    cv::imshow("C_K_", predictions_mat_);
+    cv::imshow("Ground Truth", combined_mat_);
+    //cv::imshow("C_K_", predictions_mat_);
     cv::waitKey(10);
 
 }
