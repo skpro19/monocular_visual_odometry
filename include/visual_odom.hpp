@@ -149,7 +149,10 @@ class VisualOdom{
         //**visualization vars
         cv::Mat predictions_mat_ = cv::Mat::zeros(1000, 1000, CV_8UC3);
         cv::Mat gt_mat_ = cv::Mat::zeros(1000, 1000, CV_8UC3);
-    
+
+
+        double getScale(int curr_idx_, int prev_idx_);
+
 
 };  
 
