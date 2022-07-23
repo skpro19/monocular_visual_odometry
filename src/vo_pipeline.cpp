@@ -63,7 +63,7 @@ void VisualOdom::run_vo_pipeline(){
 
     int sz_ = image_file_names_.size(); 
 
-    for(int i = 400 ; i < sz_  - 1; i++) {
+    for(int i = 0 ; i < sz_  - 1; i++) {
 
         //std::cout << "i: " << i << std::endl;
 
@@ -130,7 +130,8 @@ void VisualOdom::run_vo_pipeline(){
 
         }*/
 
-        double scale_ = getAbsoluteScale(i); 
+        //double scale_ = getAbsoluteScale(i); 
+        double scale_ = getScale(i); 
         
         bool flag_ = ((scale_ > 0.1) &&  (t.at<double>(2,0) > t.at<double>(0, 0)) && (t.at<double>(2, 0) > t.at<double>(1,0)))  ; 
 

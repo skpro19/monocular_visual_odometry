@@ -164,13 +164,13 @@ double VisualOdom::getScale(int curr_idx_, int prev_idx_) {
 
 }
 
-double VisualOdom::getAbsoluteScale(int frame_id)	{
+/*double VisualOdom::getAbsoluteScale(int frame_id)	{
 
     using namespace std;
 
     string line;
     int i = 0;
-    ifstream myfile ("/home/skpro19/simple_visual_odom/data/02/02.txt");
+    ifstream myfile ("/home/skpro19/simple_visual_odom/data/00/00.txt");
     
     double x =0, y=0, z = 0;
     double x_prev, y_prev, z_prev;
@@ -209,7 +209,7 @@ double VisualOdom::getAbsoluteScale(int frame_id)	{
 
     return scale_;
 
-}
+}*/
 
 
 
