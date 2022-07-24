@@ -1,10 +1,10 @@
 #include "../include/visual_odom.hpp"
 
 
+
+
 cv::Vec3f rotationMatrixToEulerAngles(cv::Mat &R)
 {
-
-    //assert(isRotationMatrix(R));
 
     float sy = sqrt(R.at<double>(0,0) * R.at<double>(0,0) +  R.at<double>(1,0) * R.at<double>(1,0) );
 
@@ -52,25 +52,13 @@ void VisualOdom::run_vo_pipeline(){
     cv::hconcat(NO_ROT_, NO_T_, C_k_minus_1_);
     cv::vconcat(C_k_minus_1_, TEMP_, C_k_minus_1_);
 
-    std::cout << "C_k_minus_1_: " << C_k_minus_1_ << std::endl;
-
-    //C_k_minus_1_.convertTo(C_k_minus_1_, CV_64F);
-
-    //std::cout << "C_k_minus_1_.size(): " << C_k_minus_1_.size() << std::endl;
-    //std::cout << "C_k_minus_1_: " << C_k_minus_1_ << std::endl;
-
     int last_idx_ = 0 ;
 
     int sz_ = image_file_names_.size(); 
 
-    int mn_inlier_cnt_ = 1000;
-
     for(int i = 1 ; i < sz_; i++) {
 
-        //std::cout << "i: " << i << std::endl;
-
-        //last_idx_ = i -1; 
-
+    
         kp_1.resize(0); 
         kp_2.resize(0); 
 
@@ -79,6 +67,8 @@ void VisualOdom::run_vo_pipeline(){
     
         cv::Mat img_1 = cv::imread(image_file_names_[last_idx_].c_str());
         cv::Mat img_2 = cv::imread(image_file_names_[i].c_str());
+
+        std::cout << "img_1.size(): " << img_1.size() << std::endl;
 
         extract_features(img_1, img_2);
         match_features(img_1, img_2);
@@ -96,10 +86,16 @@ void VisualOdom::run_vo_pipeline(){
             kp_1f.push_back(p1_); 
             kp_2f.push_back(p2_);
 
-            cv::circle( img_1, p1_, 2, cv::Scalar( 0, 255, 0), -1 );
+            /*cv::circle( img_1, p1_, 2, cv::Scalar( 0, 255, 0), -1 );
             cv::line(img_1, p1_, p2_, cv::Scalar(0, 255,0));
             cv::circle( img_1, p2_, 2, cv::Scalar( 255, 0, 0), -1 );
+            */
+
+            cv::circle( img_1, p1_, 2, cv::viz::Color::yellow(), -1 );
+            cv::line(img_1, p1_, p2_, cv::viz::Color::pink());
+            cv::circle( img_1, p2_, 2, cv::viz::Color::orange_red(), -1 );
             
+
         }
         
         
@@ -108,14 +104,13 @@ void VisualOdom::run_vo_pipeline(){
 
         E_ = cv::findEssentialMat(kp_2f, kp_1f, K_,cv::RANSAC, 0.999, 1.0, E_mask_);
 
-        
         int inlier_cnt_ =0 ; 
 
-        cv::imshow("img1", img_1);
+
+
+        cv::imshow("Road facing camera", img_1);
 
         inlier_cnt_ = cv::recoverPose(E_, kp_2f, kp_1f, K_, R, t, E_mask_);
-
-        mn_inlier_cnt_ = std::min(mn_inlier_cnt_, inlier_cnt_);
 
         std::cout << "inlier_cnt_: " << inlier_cnt_ << std::endl;
 
@@ -132,8 +127,6 @@ void VisualOdom::run_vo_pipeline(){
 
         bool flag_ = ((scale_ > 0.1) &&  (del_z_ > del_x_) && (del_z_ > del_y_))  ; 
         
-        //std::cout <<"scale_: " << scale_ << std::endl;
-
         std::cout << std::endl;
 
         if(!flag_) {continue; ;}
@@ -144,7 +137,6 @@ void VisualOdom::run_vo_pipeline(){
         cv::Mat temp_ = (cv::Mat_<double>(1, 4) << 0, 0, 0, 1); 
         temp_.convertTo(temp_, CV_64F);
 
-        //T_k_ = cv::Mat(); 
         T_k_.convertTo(T_k_, CV_64F);
 
         cv::hconcat(R, t, T_k_);

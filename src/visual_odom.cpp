@@ -112,57 +112,15 @@ void VisualOdom::match_features(const cv::Mat &img_1, const cv::Mat &img_2){
         }
     }
 
-    /*sstd::vector<cv::DMatch> best_matches_ = good_matches;
-
-    //** extracting the best 10 matches            
-    
-    
-    std::sort(best_matches_.begin(), best_matches_.end(), [](const cv::DMatch &a_, const cv::DMatch &b_) -> bool{
-
-        return a_.distance < b_.distance;
-
-    });
-
-    
-    int sz_ = (int)best_matches_.size(); 
-
-    if(sz_ > good_matches_size_) {
-
-        best_matches_.erase(best_matches_.begin() + 10, best_matches_.end());
-
-    }
-
-    sz_ = (int)best_matches_.size(); 
-   */
-
     for (auto match : good_matches) {
         
         kp_1_matched.push_back(kp_1[match.queryIdx]);
         kp_2_matched.push_back(kp_2[match.trainIdx]);
 
     }
-
-    
-
-    
-
     
 }
 
-double VisualOdom::get_z_scale(int curr_idx_, int prev_idx_) {
-
-    cv::Mat prev_poses_ = gt_poses_[prev_idx_];
-    cv::Mat curr_poses_ = gt_poses_[curr_idx_]; 
-
-    cv::Point3d prev_point_ = {prev_poses_.at<double>(0,3), prev_poses_.at<double>(1,3), prev_poses_.at<double>(2,3)};
-    cv::Point3d curr_point_ = {curr_poses_.at<double>(0,3), curr_poses_.at<double>(1,3), curr_poses_.at<double>(2,3)};
-    cv::Point3d diff_ = (curr_point_ - prev_point_);
-
-    double scale_ = std::sqrt(diff_.z * diff_.z);
-
-    return scale_;
-
-}
 
 double VisualOdom::getScale(int curr_idx_, int prev_idx_) {
 
@@ -179,52 +137,7 @@ double VisualOdom::getScale(int curr_idx_, int prev_idx_) {
 
 }
 
-/*double VisualOdom::getAbsoluteScale(int frame_id)	{
 
-    using namespace std;
-
-    string line;
-    int i = 0;
-    ifstream myfile ("/home/skpro19/simple_visual_odom/data/00/00.txt");
-    
-    double x =0, y=0, z = 0;
-    double x_prev, y_prev, z_prev;
-    if (myfile.is_open())
-    {
-    while (( getline (myfile,line) ) && (i<=frame_id))
-    {
-    z_prev = z;
-    x_prev = x;
-    y_prev = y;
-    std::istringstream in(line);
-    //cout << line << '\n';
-    for (int j=0; j<12; j++)  {
-    in >> z ;
-    if (j==7) y=z;
-    if (j==3)  x=z;
-    }
-
-    i++;
-    }
-    myfile.close();
-    }
-
-    else {
-    cout << "Unable to open file";
-    return 0;
-    }
-
-    //std::cout << "x: " << x  << " y: " << y << " z: " << z << std::endl; 
-    //std::cout << "x_prev: " << x_prev << " y_prev: " << y_prev << " z_prev: " << z_prev << std::endl;
-
-    double scale_ =  sqrt((x-x_prev)*(x-x_prev) + (y-y_prev)*(y-y_prev) + (z-z_prev)*(z-z_prev)) ;
-    //double scale_ =  sqrt((z-z_prev)*(z-z_prev)) ;
-
-    //std::cout << "frame: " << frame_id << "scale: " << scale_ << std::endl;
-
-    return scale_;
-
-}*/
 
 
 
